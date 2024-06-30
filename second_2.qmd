@@ -1,0 +1,417 @@
+---
+title: "CMS & Open Payments"
+execute:
+  warning: false
+  message: false
+format:
+  html:
+    code-fold: show
+    toc: true
+    theme: cosmo
+---
+
+
+Loads in packages for R 
+
+```{r}
+library(tidyverse)
+library(RSQLite)
+library(DBI)
+```
+
+
+### Identify cohort 
+
+Gets a baseline cohort for oncologists billing to CMS (part B & fee-for-service) in 2017.
+
+::: {.panel-tabset}
+
+## R
+
+
+```{r}
+# | code-fold: false
+
+
+
+phys_import <- data.table::fread("Medicare_Physician_Other_Practitioners_by_Provider_2017.csv")
+
+oncs <- phys_import |> 
+  filter(grepl("onco", Rndrng_Prvdr_Type, ignore.case = T))
+```
+
+## SQL
+
+```{r}
+
+
+con <- dbConnect(RSQLite::SQLite(), "cms.db")
+
+QUERY_temp <- dbSendQuery(con, "CREATE TABLE physicians_onco AS SELECT * 
+                          FROM physicians2017 WHERE LOWER(Rndrng_Prvdr_Type) LIKE '%onco%'")
+
+
+oncs_sql <- dbReadTable(con, "physicians_onco")
+
+
+dbClearResult(QUERY_temp)
+
+dbDisconnect(con)
+
+```
+
+:::
+
+
+QCs the R & SQL code outputs match
+
+```{r}
+dim(oncs_sql) == #18,090 rows
+  dim(oncs) # 18,090 rows
+
+identical(oncs, data.table::as.data.table(oncs_sql))
+
+
+
+```
+
+
+### Open payments dataset
+
+```{r}
+
+#loads in the open payments dataset into R
+rsch <- data.table::fread("OP_DTL_RSRCH_PGYR2017_P06282024_06122024.csv")
+
+#QC of dates to make sure it's in time period
+rsch |> 
+  mutate(yr = gsub(".*(?=[0-9]{4}$)", "", Date_of_Payment, perl = T)) |> 
+  select(Date_of_Payment, yr) |> 
+  count(yr)
+```
+
+The data set is structured to show a record of payment. The record of payment can be made directly to the physician or to the institution, where the physician is the PI. These are stored across features within a single record of payment. 
+
+This section separates out the 2 types of payments, to get a merged list of each physician and the record of payment associated with it. 
+
+
+
+::: {.panel-tabset}
+
+## R
+
+```{r}
+# gets if the individual is covered
+resrch_npis_oth <- rsch |> 
+  filter(Covered_Recipient_NPI %in% oncs$Rndrng_NPI) |> 
+  select(Record_ID, Covered_Recipient_NPI) |> 
+  rename(npi = Covered_Recipient_NPI) |> 
+  mutate(type = "covered")
+
+
+# gets the individual if record of payment is made to institution 
+resrch_npis_pis <- rsch |> 
+  select(Record_ID, ends_with("NPI")) |> 
+  select(-Covered_Recipient_NPI) |> 
+  pivot_longer(cols = ends_with("NPI"), 
+               names_to = "type", 
+               values_to = "npi") |> 
+  filter(!is.na(npi)) |> 
+  mutate(type = "PI")
+
+
+# Combines into final table of oncologists with a record of payment 
+oncs_rsch_op <- rbind(resrch_npis_oth, resrch_npis_pis) |> #786,104 rows
+  distinct(Record_ID, npi, .keep_all = T) |> #786,104 rows
+  filter(npi %in% oncs$Rndrng_NPI) |> # only oncs, 150,322 rows
+  left_join(rsch[, c("Record_ID", "Total_Amount_of_Payment_USDollars",
+                     "Form_of_Payment_or_Transfer_of_Value", 
+                     "Submitting_Applicable_Manufacturer_or_Applicable_GPO_Name")], 
+            by = "Record_ID") # adds back in other features
+
+
+```
+
+
+## SQL
+
+```{r}
+
+con <- dbConnect(RSQLite::SQLite(), "cms.db")
+
+
+
+QUERY_merged_op_rsch_npis <- dbSendQuery(con, "WITH resrch_npis_oth AS (
+    SELECT Record_ID, 
+      Covered_Recipient_NPI AS npi, 
+      'covered' AS type FROM op_rsch2017 
+      WHERE Covered_Recipient_NPI IN (SELECT Rndrng_NPI FROM physicians_onco)
+),
+resrch_npis_pis AS (
+    SELECT 
+        Record_ID, 
+        Principal_Investigator_1_NPI AS npi FROM op_rsch2017  WHERE Principal_Investigator_1_NPI IS NOT NULL
+    UNION ALL
+    SELECT 
+        Record_ID, 
+        Principal_Investigator_2_NPI AS npi FROM op_rsch2017  WHERE Principal_Investigator_2_NPI IS NOT NULL
+    UNION ALL
+    SELECT 
+        Record_ID, 
+        Principal_Investigator_3_NPI AS npi FROM op_rsch2017  WHERE Principal_Investigator_3_NPI IS NOT NULL
+    UNION ALL
+    SELECT 
+        Record_ID, 
+        Principal_Investigator_4_NPI AS npi FROM op_rsch2017  WHERE Principal_Investigator_4_NPI IS NOT NULL
+    UNION ALL
+    SELECT 
+        Record_ID, 
+        Principal_Investigator_5_NPI AS npi FROM op_rsch2017  WHERE Principal_Investigator_5_NPI IS NOT NULL
+
+),
+combined_resrch_npis AS (
+    SELECT * FROM resrch_npis_oth
+    UNION ALL
+    SELECT Record_ID, npi, 'PI' AS type FROM resrch_npis_pis
+),
+oncs_rsch_op AS (
+    SELECT DISTINCT 
+        c.Record_ID, 
+        c.npi,
+        c.type
+    FROM 
+        combined_resrch_npis c
+    WHERE 
+        c.npi IN (SELECT Rndrng_NPI FROM physicians_onco)
+) SELECT 
+    o.*, 
+    r.Total_Amount_of_Payment_USDollars,
+    r.Form_of_Payment_or_Transfer_of_Value,
+    r.Submitting_Applicable_Manufacturer_or_Applicable_GPO_Name
+FROM 
+    oncs_rsch_op o
+LEFT JOIN 
+    op_rsch2017 r ON o.Record_ID = r.Record_ID;
+")
+
+
+
+
+oncs_rsch_op_SQL <- dbFetch(QUERY_merged_op_rsch_npis )
+dbClearResult(QUERY_merged_op_rsch_npis)
+
+
+
+dbDisconnect(con)
+
+
+```
+
+:::
+
+QCs the R & SQL code outputs match
+
+```{r}
+identical(
+arrange(oncs_rsch_op, Record_ID),
+data.table::as.data.table(oncs_rsch_op_SQL) |> #150,322 rows
+  arrange(Record_ID)
+)
+```
+
+
+
+Similarly, there can be multiple drugs associated with the record of payment. This provides a crosswalk between drug code (ndc from the FDA) and the record of payment
+
+
+```{r}
+
+#dataset of drugs and ndcs  per record
+drugs_ops <- rsch |> 
+  filter(Record_ID %in% oncs_rsch_op$Record_ID) |> #grabs only oncologists w/ a record of payment on file
+  select(Record_ID, starts_with(c('Associated_Drug_or_Biological_NDC', "Product_Category_or_Therapeutic_Area"))) |> 
+  pivot_longer(cols = starts_with(c('Associated_Drug_or_Biological_NDC', "Product_Category_or_Therapeutic_Area")), 
+               names_to = "feature", 
+               values_to = "value") |> 
+  filter(value != "") |> 
+  mutate(number = gsub(".*_", "", feature),
+    feature = ifelse(grepl("^Associated_Drug_or_", feature), "ndc", "type_drug")) |>
+  pivot_wider(id_cols = c(Record_ID, number), 
+              names_from = feature, 
+              values_from = value) |> 
+  filter(!is.na(ndc))  |> 
+  select(-number)
+
+```
+
+
+To connect the drug codes (NDC) to the crosswalks/dictionary of the billing data, it has to be in the same format (5DIGITS-4DIGITS-2DIGITS). Unfortunately, the open payments database uses a truncated version of the NDC codes. This 1) reformats the NDC codes into the more compatible version, and 2) merges with the oncologist IDs.
+
+
+
+
+```{r}
+
+
+ 
+splits <-  drugs_ops |> 
+   mutate(splits = strsplit(ndc, "-")) |> # NDC Package Code
+   unnest_wider(splits, names_sep = "_") |>
+   mutate(splits_1 = str_pad(splits_1, 5, pad = "0"),
+          splits_2 = str_pad(splits_2, 4, pad = "0"),
+          splits_3 = str_pad(splits_3, 2, pad = "0")) |>
+    mutate(ndc_11_digits = paste(splits_1, splits_2, splits_3, sep = "-")) |>
+  left_join(oncs_rsch_op, by = "Record_ID") # combines with each oncologist with the record payment (more than 1 oncologist can be listed per payment & there can be more than 1 drug per record of payment)
+
+```
+
+This acts as a dictionary/crosswalk, providing all drug codes (NDC) for each billing code (HCPCS). 
+
+```{r}
+crosswalk <- data.table::fread("crosswalk.csv") |> 
+  janitor::clean_names()
+
+
+dictionat_ds <- distinct(select(crosswalk, x2021_code, ndc2))  |> 
+  mutate(ncd_group = paste0("ncd_", row_number()), 
+         .by = x2021_code) |> 
+  summarize(ndcs_possible = list(ndc2), 
+            .by = x2021_code)
+```
+
+
+
+::: {.panel-tabset}
+
+This imports the billing data 
+
+
+## R
+
+```{r}
+billing_import <- data.table::fread("Medicare_Physician_Other_Practitioners_by_Provider_and_Service_2021.csv")
+
+oncs_billing <- billing_import |> 
+  filter(HCPCS_Drug_Ind == "Y" & Rndrng_NPI %in% oncs$Rndrng_NPI) |> 
+  select(Rndrng_NPI, HCPCS_Cd, HCPCS_Desc) 
+
+
+```
+
+## SQL
+
+```{r}
+
+con <- dbConnect(RSQLite::SQLite(), "cms.db")
+
+QUERY_oncs_billing <- dbSendQuery(con, "SELECT 
+    b.Rndrng_NPI, 
+    b.HCPCS_Cd, 
+    b.HCPCS_Desc
+FROM 
+    billings2021 b
+JOIN 
+    physicians_onco o ON b.Rndrng_NPI = o.Rndrng_NPI
+WHERE 
+    b.HCPCS_Drug_Ind = 'Y';")
+      
+oncs_billing_SQL <- dbFetch(QUERY_oncs_billing )
+dbClearResult(QUERY_oncs_billing )
+      
+
+
+
+
+      
+dbDisconnect(con)
+
+```
+::: 
+
+#QCS
+
+
+```{r}
+identical(data.table::as.data.table(oncs_billing_SQL), oncs_billing)
+```
+
+
+
+
+Takes all p
+
+```{r}
+
+
+
+
+final <- oncs_billing |> 
+  left_join(dictionat_ds, by = c("HCPCS_Cd" = "x2021_code")) |> 
+  unnest(ndcs_possible) |> 
+  left_join(splits, by = c("ndcs_possible" ="ndc_11_digits", "Rndrng_NPI"="npi")) |> 
+  filter(!is.na(Record_ID)) |> 
+  distinct(Rndrng_NPI, Record_ID, HCPCS_Cd, .keep_all = T) # makes sure billings aren't counted twice
+  
+
+  
+
+```
+
+
+
+```{r}
+# | echo: false
+# | include: false
+
+con <- dbConnect(RSQLite::SQLite(), "cms.db")
+
+dbRemoveTable(con, "physicians_onco")
+dbDisconnect(con)
+
+
+```
+
+## Archive 
+
+Debugging the SQL code above, for the SQL and R outputs did not match
+
+```{r}
+#| eval: FALSE
+#| code-fold: true
+
+dim(oncs_rsch_op) ==
+dim(oncs_rsch_op_SQL)
+
+
+names(oncs_rsch_op_SQL) == names(oncs_rsch_op)
+oncs_rsch_op_SQL$Record_ID == oncs_rsch_op$Record_ID
+
+
+setdiff(oncs_rsch_op$Record_ID, oncs_rsch_op_SQL$Record_ID)
+sapply(oncs_rsch_op_SQL, typeof) == sapply(oncs_rsch_op, typeof)
+
+
+```
+
+
+This creates quick summary statistics per each oncologist
+
+```{r}
+
+rsch_op_Summary <- oncs_rsch_op |> 
+  summarize(n = n(), 
+            total = sum(Total_Amount_of_Payment_USDollars),
+            median = median(Total_Amount_of_Payment_USDollars),
+            percentile = list(quantile(Total_Amount_of_Payment_USDollars)),
+            idk = list(unique(Submitting_Applicable_Manufacturer_or_Applicable_GPO_Name)),
+            # details = paste0(Form_of_Payment_or_Transfer_of_Value, collapse = "; "),
+            .by = npi) |> 
+  unnest_wider(col = percentile) |> 
+  janitor::clean_names() |> 
+  mutate(percentile = cut_number(total, n = 4, labels = c("25th", 
+                                                          "50th",
+                                                          "75th", 
+                                                          "100th"))) |> 
+  rename_with( ~ paste0("op_", .x)) 
+
+```
