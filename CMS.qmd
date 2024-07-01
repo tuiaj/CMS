@@ -50,10 +50,10 @@ All databases used in production
 
 | Variable Name(s) | Webpage Link | Retrieved Date | File Download Link (last updated: 6/30/2024)
 |:------:|:-----|---------|:------|:------|
-|   phys_import  |  [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider/data/2021) | June 2024 |  [Download](https://data.cms.gov/data-api/v1/dataset/1a3a5f39-09ac-48e2-b9bf-b371ac01c07e/data)
-|   rsch |  [openPayment](https://www.cms.gov/priorities/key-initiatives/open-payments/data/dataset-downloads) | June 2024 | [Download](https://download.cms.gov/openpayments/PGYR17_P062824.ZIP) 
-crosswalk | [CMS ASP Pricing](https://www.cms.gov/medicare/payment/part-b-drugs/asp-pricing-files) | June 2024 | [Download](https://www.cms.gov/files/zip/october-2021-asp-ndc-hcpcs-crosswalk.zip) 
-| billing_import | [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service/data/2021) | June 2024 | [Download](https://data.cms.gov/data-api/v1/dataset/5c67d835-3862-4f63-897d-85d3eac82d5b/data)
+|   `phys_import`  |  [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider/data/2021) | June 2024 |  [Download](https://data.cms.gov/data-api/v1/dataset/1a3a5f39-09ac-48e2-b9bf-b371ac01c07e/data)
+|   `rsch` |  [openPayment](https://www.cms.gov/priorities/key-initiatives/open-payments/data/dataset-downloads) | June 2024 | [Download](https://download.cms.gov/openpayments/PGYR17_P062824.ZIP) 
+| `crosswalk` | [CMS ASP Pricing](https://www.cms.gov/medicare/payment/part-b-drugs/asp-pricing-files) | June 2024 | [Download](https://www.cms.gov/files/zip/october-2021-asp-ndc-hcpcs-crosswalk.zip) 
+| `billing_import` | [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service/data/2021) | June 2024 | [Download](https://data.cms.gov/data-api/v1/dataset/5c67d835-3862-4f63-897d-85d3eac82d5b/data)
 
 
 
@@ -103,7 +103,7 @@ dbDisconnect(con)
 :::
 
 
-QCs the R & SQL code deliver the same output
+Validates that the R & SQL code deliver the same output
 
 ```{r}
 #| output: FALSE
@@ -257,7 +257,7 @@ dbDisconnect(con)
 
 :::
 
-QCs the R & SQL code deliver the same output
+Validates that the R & SQL code deliver the same output
 
 ```{r}
 #| output: False
@@ -385,7 +385,7 @@ dbDisconnect(con)
 ```
 ::: 
 
-QCs the R & SQL code deliver the same output
+Validates that the R & SQL code deliver the same output
 
 
 ```{r}
