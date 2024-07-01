@@ -262,6 +262,9 @@ data.table::as.data.table(oncs_rsch_op_SQL) |> #150,322 rows
 
 Similarly, there can be multiple drugs associated with the record of payment. This provides a crosswalk between drug code (ndc from the FDA) and the record of payment
 
+::: {.callout-note}
+CMS only provides public billing data for Part B medications. Public Part D is too aggregated to merge effectively with other CMS billing data. 
+:::
 
 ```{r}
 
