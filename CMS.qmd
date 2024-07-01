@@ -8,6 +8,7 @@ format:
     page-layout: full
     toc: true
     theme: cosmo
+    link-external-newwindow: true
 ---
 
 ## Overview
