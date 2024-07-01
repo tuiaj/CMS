@@ -19,7 +19,7 @@ Using publicly available databases, generate a dataset of oncology specialists w
 <br />
 <br />
 <br />
-## Techincal Assets 
+## Technical Assets 
 
 #### R Packages
 
