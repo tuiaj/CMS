@@ -12,7 +12,7 @@ format:
 
 ## Overview
 
-Using publicly provided databases, provide a dataset of oncology specialists who billed for a drug prescription in 2021 that received pharmaceutical research funding for the same drug in 2017. Includes data linkage across disparate database. 
+Using publicly available databases, generate a dataset of oncology specialists who billed for a drug prescription in 2021 that received pharmaceutical research funding for the same drug in 2017. Includes data linkage across disparate database. 
 
 
 <br />
