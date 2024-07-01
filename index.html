@@ -97,7 +97,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#Technical-assets" id="toc-Technical-assets" class="nav-link active" data-scroll-target="#Technical-assets">Technical Assets</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#technical-assets" id="toc-technical-assets" class="nav-link" data-scroll-target="#technical-assets">Technical Assets</a></li>
   <li><a href="#identifying-cohort" id="toc-identifying-cohort" class="nav-link" data-scroll-target="#identifying-cohort">Identifying cohort</a></li>
   <li><a href="#open-payments" id="toc-open-payments" class="nav-link" data-scroll-target="#open-payments">Open payments</a></li>
   <li><a href="#crosswalk-billing-data" id="toc-crosswalk-billing-data" class="nav-link" data-scroll-target="#crosswalk-billing-data">Crosswalk + Billing Data</a></li>
@@ -126,8 +127,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="Technical-assets" class="level2">
-<h2 class="anchored" data-anchor-id="Technical-assets">Technical Assets</h2>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>Using publicly available databases, generate a dataset of oncology specialists who billed for a drug prescription in 2021 that received pharmaceutical research funding for the same drug in 2017. Includes data linkage across disparate databases.</p>
+<p><br> <br> <br></p>
+</section>
+<section id="technical-assets" class="level2">
+<h2 class="anchored" data-anchor-id="technical-assets">Technical Assets</h2>
 <section id="r-packages" class="level4">
 <h4 class="anchored" data-anchor-id="r-packages">R Packages</h4>
 <div class="cell">
@@ -145,13 +151,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">version =</span> V1) <span class="sc">|&gt;</span> </span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  DT<span class="sc">::</span><span class="fu">datatable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-24630bc8bc46c71a5f56" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-24630bc8bc46c71a5f56">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12"],["DBI","RSQLite","lubridate","forcats","stringr","dplyr","purrr","readr","tidyr","tibble","ggplot2","tidyverse"],["1.2.3","2.3.5","1.9.3","1.0.0","1.5.1","1.1.4","1.0.2","2.1.4","1.3.1","3.2.1","3.5.0","2.0.0"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>package<\/th>\n      <th>version<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"package","targets":1},{"name":"version","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-0bd95e78e2051e3b5c9e" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-0bd95e78e2051e3b5c9e">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12"],["DBI","RSQLite","lubridate","forcats","stringr","dplyr","purrr","readr","tidyr","tibble","ggplot2","tidyverse"],["1.2.3","2.3.5","1.9.3","1.0.0","1.5.1","1.1.4","1.0.2","2.1.4","1.3.1","3.2.1","3.5.0","2.0.0"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>package<\/th>\n      <th>version<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"package","targets":1},{"name":"version","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
+<p><br></p>
 </section>
-<section id="datasets" class="level4">
-<h4 class="anchored" data-anchor-id="datasets">Datasets</h4>
+<section id="databases" class="level4">
+<h4 class="anchored" data-anchor-id="databases">Databases</h4>
 <p>All databases used in production</p>
 <table class="table">
 <thead>
@@ -165,28 +172,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: center;">phys_import</td>
+<td style="text-align: center;"><code>phys_import</code></td>
 <td style="text-align: left;"><a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider/data/2021">CMS</a></td>
 <td>June 2024</td>
 <td style="text-align: left;"><a href="https://data.cms.gov/data-api/v1/dataset/1a3a5f39-09ac-48e2-b9bf-b371ac01c07e/data">Download</a></td>
 <td style="text-align: left;"></td>
 </tr>
 <tr class="even">
-<td style="text-align: center;">rsch</td>
+<td style="text-align: center;"><code>rsch</code></td>
 <td style="text-align: left;"><a href="https://www.cms.gov/priorities/key-initiatives/open-payments/data/dataset-downloads">openPayment</a></td>
 <td>June 2024</td>
 <td style="text-align: left;"><a href="https://download.cms.gov/openpayments/PGYR17_P062824.ZIP">Download</a></td>
 <td style="text-align: left;"></td>
 </tr>
 <tr class="odd">
-<td style="text-align: center;">crosswalk</td>
+<td style="text-align: center;"><code>crosswalk</code></td>
 <td style="text-align: left;"><a href="https://www.cms.gov/medicare/payment/part-b-drugs/asp-pricing-files">CMS ASP Pricing</a></td>
 <td>June 2024</td>
 <td style="text-align: left;"><a href="https://www.cms.gov/files/zip/october-2021-asp-ndc-hcpcs-crosswalk.zip">Download</a></td>
 <td style="text-align: left;"></td>
 </tr>
 <tr class="even">
-<td style="text-align: center;">billing_import</td>
+<td style="text-align: center;"><code>billing_import</code></td>
 <td style="text-align: left;"><a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service/data/2021">CMS</a></td>
 <td>June 2024</td>
 <td style="text-align: left;"><a href="https://data.cms.gov/data-api/v1/dataset/5c67d835-3862-4f63-897d-85d3eac82d5b/data">Download</a></td>
@@ -194,6 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<p><br> <br> <br></p>
 </section>
 </section>
 <section id="identifying-cohort" class="level2">
@@ -228,13 +236,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>QCs the R &amp; SQL code deliver the same output</p>
+<p>Validates that the R &amp; SQL code deliver the same output</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(oncs_sql) <span class="sc">==</span> <span class="co">#18,090 rows</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>(oncs) <span class="co"># 18,090 rows</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(oncs, data.table<span class="sc">::</span><span class="fu">as.data.table</span>(oncs_sql))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><br> <br> <br></p>
 </section>
 <section id="open-payments" class="level2">
 <h2 class="anchored" data-anchor-id="open-payments">Open payments</h2>
@@ -363,7 +372,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>QCs the R &amp; SQL code deliver the same output</p>
+<p>Validates that the R &amp; SQL code deliver the same output</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">arrange</span>(oncs_rsch_op, Record_ID),</span>
@@ -375,6 +384,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="listing-drugs" class="level4">
 <h4 class="anchored" data-anchor-id="listing-drugs">Listing Drugs</h4>
 <p>Similarly, there can be multiple drugs associated with the record of payment. This provides a crosswalk between drug code (ndc from the FDA) and the record of payment</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>CMS only provides public billing data for Part B medications. Public Part D is too aggregated to merge effectively with other CMS billing data.</p>
+</div>
+</div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#dataset of drugs and ndcs  per record</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>drugs_ops <span class="ot">&lt;-</span> rsch <span class="sc">|&gt;</span> </span>
@@ -403,6 +425,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">ndc_11_digits =</span> <span class="fu">paste</span>(splits_1, splits_2, splits_3, <span class="at">sep =</span> <span class="st">"-"</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(oncs_rsch_op, <span class="at">by =</span> <span class="st">"Record_ID"</span>) <span class="co"># combines with each oncologist with the record payment (more than 1 oncologist can be listed per payment &amp; there can be more than 1 drug per record of payment)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><br> <br> <br></p>
 </section>
 </section>
 <section id="crosswalk-billing-data" class="level2">
@@ -457,7 +480,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>QCs the R &amp; SQL code deliver the same output</p>
+<p>Validates that the R &amp; SQL code deliver the same output</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(data.table<span class="sc">::</span><span class="fu">as.data.table</span>(oncs_billing_SQL), oncs_billing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -470,6 +493,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Record_ID)) <span class="sc">|&gt;</span> </span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(Rndrng_NPI, Record_ID, HCPCS_Cd, <span class="at">.keep_all =</span> T) <span class="co"># makes sure billings aren't counted twice</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><br> <br> <br></p>
 </section>
 <section id="archive" class="level2">
 <h2 class="anchored" data-anchor-id="archive">Archive</h2>
@@ -603,6 +627,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         if (link.dataset.originalHref !== undefined) {
           link.href = link.dataset.originalHref;
         }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
       }
     }
   function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
