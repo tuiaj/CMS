@@ -14,6 +14,10 @@ format:
 
 Using publicly provided databases, provide a dataset of oncology specialists who billed for a drug prescription in 2021 that received pharmaceutical research funding for the same drug in 2017. Includes data linkage across disparate database. 
 
+
+<br />
+<br />
+<br />
 ## Techincal Assets 
 
 #### R Packages
@@ -37,9 +41,9 @@ as.data.frame(as.matrix(map(pluck(docs, "otherPkgs"), "Version"))) |>
   DT::datatable()
 
 ```
+<br />
 
-
-#### Datasets
+#### Databases
 
 All databases used in production
 
@@ -52,7 +56,9 @@ crosswalk | [CMS ASP Pricing](https://www.cms.gov/medicare/payment/part-b-drugs/
 
 
 
-
+<br />
+<br />
+<br />
 ## Identifying cohort 
 
 Gets a baseline cohort for oncologists billing to CMS (part B & fee-for-service) in 2021.
@@ -111,7 +117,9 @@ identical(oncs, data.table::as.data.table(oncs_sql))
 
 ```
 
-
+<br />
+<br />
+<br />
 ## Open payments
 
 ```{r}
@@ -308,7 +316,9 @@ splits <-  drugs_ops |>
   left_join(oncs_rsch_op, by = "Record_ID") # combines with each oncologist with the record payment (more than 1 oncologist can be listed per payment & there can be more than 1 drug per record of payment)
 
 ```
-
+<br />
+<br />
+<br />
 ## Crosswalk + Billing Data
 
 This acts as a dictionary/crosswalk, providing all drug codes (NDC) for each billing code (HCPCS). 
@@ -418,7 +428,9 @@ dbDisconnect(con)
 
 
 ```
-
+<br />
+<br />
+<br />
 ## Archive 
 
 Debugging the SQL code above, for the SQL and R outputs did not match
