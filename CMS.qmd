@@ -5,13 +5,16 @@ execute:
   message: false
 format:
   html:
-    code-fold: show
+    page-layout: full
     toc: true
     theme: cosmo
 ---
 
 
-Loads in packages for R 
+
+## Techincal Assets 
+
+#### R Packages
 
 ```{r}
 library(tidyverse)
@@ -20,9 +23,37 @@ library(DBI)
 ```
 
 
-### Identify cohort 
 
-Gets a baseline cohort for oncologists billing to CMS (part B & fee-for-service) in 2017.
+```{r}
+docs <- sessionInfo()
+
+
+as.data.frame(as.matrix(map(pluck(docs, "otherPkgs"), "Version"))) |> 
+  rownames_to_column("package") |> 
+  unnest(V1) |> 
+  rename(version = V1) |> 
+  DT::datatable()
+
+```
+
+
+#### Datasets
+
+All databases used in production
+
+| Variable Name(s) | Webpage Link | Retrieved Date | File Download Link (last updated: 6/30/2024)
+|:------:|:-----|---------|:------|:------|
+|   phys_import  |  [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider/data/2021) | June 2024 |  [Download](https://data.cms.gov/data-api/v1/dataset/1a3a5f39-09ac-48e2-b9bf-b371ac01c07e/data)
+|   rsch |  [openPayment](https://www.cms.gov/priorities/key-initiatives/open-payments/data/dataset-downloads) | June 2024 | [Download](https://download.cms.gov/openpayments/PGYR17_P062824.ZIP) 
+crosswalk | [CMS ASP Pricing](https://www.cms.gov/medicare/payment/part-b-drugs/asp-pricing-files) | June 2024 | [Download](https://www.cms.gov/files/zip/october-2021-asp-ndc-hcpcs-crosswalk.zip) 
+| billing_import | [CMS](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service/data/2021) | June 2024 | [Download](https://data.cms.gov/data-api/v1/dataset/5c67d835-3862-4f63-897d-85d3eac82d5b/data)
+
+
+
+
+## Identifying cohort 
+
+Gets a baseline cohort for oncologists billing to CMS (part B & fee-for-service) in 2021.
 
 ::: {.panel-tabset}
 
@@ -30,11 +61,11 @@ Gets a baseline cohort for oncologists billing to CMS (part B & fee-for-service)
 
 
 ```{r}
-# | code-fold: false
 
 
 
-phys_import <- data.table::fread("Medicare_Physician_Other_Practitioners_by_Provider_2017.csv")
+
+phys_import <- data.table::fread("Medicare_Physician_Other_Practitioners_by_Provider_2021.csv")
 
 oncs <- phys_import |> 
   filter(grepl("onco", Rndrng_Prvdr_Type, ignore.case = T))
@@ -48,7 +79,7 @@ oncs <- phys_import |>
 con <- dbConnect(RSQLite::SQLite(), "cms.db")
 
 QUERY_temp <- dbSendQuery(con, "CREATE TABLE physicians_onco AS SELECT * 
-                          FROM physicians2017 WHERE LOWER(Rndrng_Prvdr_Type) LIKE '%onco%'")
+                          FROM physicians2021 WHERE LOWER(Rndrng_Prvdr_Type) LIKE '%onco%'")
 
 
 oncs_sql <- dbReadTable(con, "physicians_onco")
@@ -63,9 +94,12 @@ dbDisconnect(con)
 :::
 
 
-QCs the R & SQL code outputs match
+QCs the R & SQL code deliver the same output
 
 ```{r}
+#| output: FALSE
+
+
 dim(oncs_sql) == #18,090 rows
   dim(oncs) # 18,090 rows
 
@@ -76,7 +110,7 @@ identical(oncs, data.table::as.data.table(oncs_sql))
 ```
 
 
-### Open payments dataset
+## Open payments
 
 ```{r}
 
@@ -92,8 +126,9 @@ rsch |>
 
 The data set is structured to show a record of payment. The record of payment can be made directly to the physician or to the institution, where the physician is the PI. These are stored across features within a single record of payment. 
 
-This section separates out the 2 types of payments, to get a merged list of each physician and the record of payment associated with it. 
+This section separates out the 2 types of payments, then merges together to create a listing of each physician and the record of payment associated with it. 
 
+#### Listing Physicians
 
 
 ::: {.panel-tabset}
@@ -136,6 +171,8 @@ oncs_rsch_op <- rbind(resrch_npis_oth, resrch_npis_pis) |> #786,104 rows
 ## SQL
 
 ```{r}
+#| output: FALSE
+
 
 con <- dbConnect(RSQLite::SQLite(), "cms.db")
 
@@ -209,9 +246,11 @@ dbDisconnect(con)
 
 :::
 
-QCs the R & SQL code outputs match
+QCs the R & SQL code deliver the same output
 
 ```{r}
+#| output: False
+
 identical(
 arrange(oncs_rsch_op, Record_ID),
 data.table::as.data.table(oncs_rsch_op_SQL) |> #150,322 rows
@@ -219,7 +258,7 @@ data.table::as.data.table(oncs_rsch_op_SQL) |> #150,322 rows
 )
 ```
 
-
+#### Listing Drugs 
 
 Similarly, there can be multiple drugs associated with the record of payment. This provides a crosswalk between drug code (ndc from the FDA) and the record of payment
 
@@ -265,6 +304,8 @@ splits <-  drugs_ops |>
 
 ```
 
+## Crosswalk + Billing Data
+
 This acts as a dictionary/crosswalk, providing all drug codes (NDC) for each billing code (HCPCS). 
 
 ```{r}
@@ -279,11 +320,11 @@ dictionat_ds <- distinct(select(crosswalk, x2021_code, ndc2))  |>
             .by = x2021_code)
 ```
 
-
+This imports the billing data, and filters for only oncologists and services pertaining to Part B drug prescriptions 
 
 ::: {.panel-tabset}
 
-This imports the billing data 
+
 
 
 ## R
@@ -328,17 +369,18 @@ dbDisconnect(con)
 ```
 ::: 
 
-#QCS
+QCs the R & SQL code deliver the same output
 
 
 ```{r}
+#| output: FALSE
 identical(data.table::as.data.table(oncs_billing_SQL), oncs_billing)
 ```
 
 
 
 
-Takes all p
+Final merge to create a table listing of all oncologists who accepted research payments in 2017 for a drug in which they later prescribed to patients in 2021. 
 
 ```{r}
 
@@ -360,8 +402,9 @@ final <- oncs_billing |>
 
 
 ```{r}
-# | echo: false
-# | include: false
+#| echo: false
+#| include: false
+#| output: false
 
 con <- dbConnect(RSQLite::SQLite(), "cms.db")
 
@@ -377,7 +420,6 @@ Debugging the SQL code above, for the SQL and R outputs did not match
 
 ```{r}
 #| eval: FALSE
-#| code-fold: true
 
 dim(oncs_rsch_op) ==
 dim(oncs_rsch_op_SQL)
@@ -397,6 +439,7 @@ sapply(oncs_rsch_op_SQL, typeof) == sapply(oncs_rsch_op, typeof)
 This creates quick summary statistics per each oncologist
 
 ```{r}
+#| eval: FALSE
 
 rsch_op_Summary <- oncs_rsch_op |> 
   summarize(n = n(), 
